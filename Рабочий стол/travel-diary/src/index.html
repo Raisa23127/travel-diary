@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌍 Дневник Путешественника</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ============ ЭКРАН АВТОРИЗАЦИИ ============ -->
+<div id="authScreen" class="auth-screen">
+    <div class="auth-card">
+        <div class="auth-logo">🌍</div>
+        <h1 class="auth-title">Дневник Путешественника</h1>
+        <p class="auth-subtitle">Войдите, чтобы продолжить</p>
+
+        <div class="auth-tabs">
+            <button class="auth-tab active" data-tab="login" type="button">Вход</button>
+            <button class="auth-tab" data-tab="register" type="button">Регистрация</button>
+        </div>
+
+        <form id="loginForm" class="auth-form" autocomplete="on">
+            <label>
+                Email
+                <input type="email" id="loginEmail" required placeholder="you@example.com" autocomplete="email" />
+            </label>
+            <label>
+                Пароль
+                <input type="password" id="loginPassword" required placeholder="••••••••" autocomplete="current-password" minlength="4" />
+            </label>
+            <div class="auth-error" id="loginError"></div>
+            <button type="submit" class="btn btn-primary full-width">Войти</button>
+        </form>
+
+        <form id="registerForm" class="auth-form hidden" autocomplete="on">
+            <label>Имя<input type="text" id="regName" required placeholder="Как вас зовут?" autocomplete="name" /></label>
+            <label>Email<input type="email" id="regEmail" required placeholder="you@example.com" autocomplete="email" /></label>
+            <label>Пароль<input type="password" id="regPassword" required placeholder="Минимум 4 символа" autocomplete="new-password" minlength="4" /></label>
+            <label>Повтор пароля<input type="password" id="regPassword2" required placeholder="Ещё раз" autocomplete="new-password" minlength="4" /></label>
+            <div class="auth-error" id="registerError"></div>
+            <button type="submit" class="btn btn-primary full-width">Зарегистрироваться</button>
+        </form>
+
+        <p class="auth-hint">🔒 Пароль хранится в виде хэша SHA-256 в вашем браузере.</p>
+    </div>
+</div>
+
+<!-- ============ ОСНОВНОЕ ПРИЛОЖЕНИЕ ============ -->
+<div id="app" class="hidden">
+
+<header class="app-header">
+    <div class="container header-inner">
+        <h1>🌍 Дневник Путешественника</h1>
+        <div class="header-actions">
+            <span class="user-chip" title="Профиль">👤 <b id="userNameChip">—</b></span>
+            <button id="themeBtn"     class="btn btn-ghost" title="Тёмная тема">🌓 Тема</button>
+            <button id="exportCsvBtn" class="btn btn-ghost" title="Экспорт в CSV">📊 CSV</button>
+            <button id="exportBtn"    class="btn btn-ghost" title="Экспорт в JSON">📤 JSON</button>
+            <label class="btn btn-ghost" title="Импорт из JSON">
+                📥 Импорт
+                <input type="file" id="importInput" accept="application/json" hidden />
+            </label>
+            <button id="logoutBtn" class="btn btn-ghost danger" title="Выйти">🚪 Выйти</button>
+            <button id="addTripBtn" class="btn btn-primary">+ Добавить</button>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+
+    <section class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">✈️</div><div class="stat-value" id="statTrips">0</div><div class="stat-label">Поездок</div></div>
+        <div class="stat-card"><div class="stat-icon">🌆</div><div class="stat-value" id="statCities">0</div><div class="stat-label">Городов</div></div>
+        <div class="stat-card"><div class="stat-icon">🌏</div><div class="stat-value" id="statCountries">0</div><div class="stat-label">Стран</div></div>
+        <div class="stat-card"><div class="stat-icon">📏</div><div class="stat-value" id="statDistance">0</div><div class="stat-label">Км пройдено</div></div>
+        <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-value" id="statDays">0</div><div class="stat-label">Дней в пути</div></div>
+        <div class="stat-card"><div class="stat-icon">📸</div><div class="stat-value" id="statPlaces">0</div><div class="stat-label">Мест посещено</div></div>
+    </section>
+
+    <section class="map-section" id="mapSection">
+        <div class="section-header">
+            <h2>🗺️ Карта путешествий</h2>
+            <div class="map-toolbar">
+                <button id="fitAllBtn"      class="btn btn-tool">🎯 Все точки</button>
+                <button id="toggleRouteBtn" class="btn btn-tool">🛣 Скрыть маршрут</button>
+                <button id="toggleLabelsBtn" class="btn btn-tool">🏷 Скрыть подписи</button>
+                <button id="resetViewBtn"   class="btn btn-tool">🔄 Сброс</button>
+                <button id="mapStyleBtn"    class="btn btn-tool">🗺 Карта</button>
+                <button id="myLocationBtn"  class="btn btn-tool">📍 Я здесь</button>
+                <button id="zoomInBtn"      class="btn btn-tool">➕</button>
+                <button id="zoomOutBtn"     class="btn btn-tool">➖</button>
+                <button id="randomTripBtn"  class="btn btn-tool">🎲 Случайная</button>
+                <button id="fullscreenBtn"  class="btn btn-tool">⛶ Экран</button>
+                <button id="printBtn"       class="btn btn-tool">🖨 Печать</button>
+            </div>
+        </div>
+        <div id="map"></div>
+        <div id="mapHint" class="map-hint">
+            👆 <b>Кликните по карте</b>, чтобы поставить точку. Каждая поездка получает номер.
+        </div>
+    </section>
+
+    <section class="trips-section">
+        <div class="trips-header">
+            <h2>📔 Мои поездки</h2>
+            <div class="trips-toolbar">
+                <select id="sortSelect" class="select">
+                    <option value="date-asc">По порядку (от первой)</option>
+                    <option value="date-desc">Сначала новые</option>
+                    <option value="rating-desc">По оценке (высокие)</option>
+                    <option value="rating-asc">По оценке (низкие)</option>
+                    <option value="title-asc">По названию (А-Я)</option>
+                    <option value="country-asc">По стране (А-Я)</option>
+                    <option value="duration-desc">По длительности</option>
+                </select>
+                <select id="ratingFilter" class="select">
+                    <option value="0">Все оценки</option>
+                    <option value="3">⭐ 3 и выше</option>
+                    <option value="4">⭐ 4 и выше</option>
+                    <option value="5">⭐ Только 5</option>
+                </select>
+                <select id="countryFilter" class="select">
+                    <option value="">Все страны</option>
+                </select>
+                <input type="text" id="searchInput" placeholder="🔍 Поиск..." />
+                <button id="resetFiltersBtn" class="btn btn-tool">↺ Сброс</button>
+            </div>
+        </div>
+        <div id="tripsList" class="trips-list"></div>
+        <div id="emptyState" class="empty-state">
+            <p>Пока нет ни одной поездки. Нажмите «+ Добавить», чтобы начать! 🚀</p>
+        </div>
+    </section>
+</main>
+
+<div class="modal" id="tripModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Новая поездка</h2>
+            <button class="modal-close" id="closeModal" type="button">✕</button>
+        </div>
+
+        <div class="pick-tip">
+            💡 <b>Кликните по карте</b> — координаты подставятся сюда автоматически.
+        </div>
+
+        <form id="tripForm">
+            <input type="hidden" id="tripId" />
+            <div class="form-row">
+                <label>Название поездки *<input type="text" id="tripTitle" required placeholder="Например: Летний отпуск в Сочи" /></label>
+            </div>
+            <div class="form-row two-cols">
+                <label>Страна *<input type="text" id="tripCountry" required placeholder="Россия" /></label>
+                <label>Город *<input type="text" id="tripCity" required placeholder="Москва" /></label>
+            </div>
+            <div class="form-row two-cols">
+                <label>Дата начала *<input type="date" id="tripStart" required /></label>
+                <label>Дата окончания *<input type="date" id="tripEnd" required /></label>
+            </div>
+            <div class="form-row two-cols">
+                <label>Широта *<input type="number" step="any" id="tripLat" required placeholder="55.7558" /></label>
+                <label>Долгота *<input type="number" step="any" id="tripLng" required placeholder="37.6173" /></label>
+            </div>
+            <div class="form-row">
+                <label>Заметки<textarea id="tripNotes" rows="3" placeholder="Впечатления, интересные места, советы..."></textarea></label>
+            </div>
+
+            <div class="form-row">
+                <label>Фотографии</label>
+                <div class="photos-editor">
+                    <div id="photoPreview" class="photo-preview"></div>
+                    <label class="photo-add-btn">
+                        📷 Добавить фото
+                        <input type="file" id="photoInput" accept="image/*" multiple hidden />
+                    </label>
+                    <div class="photos-hint">Можно добавить несколько. Фото автоматически сжимаются до ~1200px.</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>
+                    Оценка
+                    <div class="rating" id="ratingStars">
+                        <span data-value="1">★</span>
+                        <span data-value="2">★</span>
+                        <span data-value="3">★</span>
+                        <span data-value="4">★</span>
+                        <span data-value="5">★</span>
+                    </div>
+                    <input type="hidden" id="tripRating" value="0" />
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="cancelBtn">Отмена</button>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</div><!-- /#app -->
+
+<!-- Лайтбокс для просмотра фото -->
+<div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose" type="button">✕</button>
+    <button class="lightbox-prev" id="lightboxPrev" type="button">‹</button>
+    <img id="lightboxImg" src="" alt="" />
+    <button class="lightbox-next" id="lightboxNext" type="button">›</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="auth.js"></script>
+<script src="photos.js"></script>
+<script src="map.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
