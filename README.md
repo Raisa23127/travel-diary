@@ -52,3 +52,33 @@
 ---
 
 ## 📁 Структура проекта
+
+travel-diary/
+├── docs/ — документация
+│ ├── diagrams/ — диаграммы UML
+│ ├── coding-standards.md — стандарты кодирования
+│ ├── report.md — отчёт по проекту
+│ ├── review.md — ревью кода
+│ └── diary.md — дневник практики
+├── src/ — исходный код
+│ ├── index.html — главная страница
+│ ├── style.css — стили
+│ ├── auth.js — модуль авторизации
+│ ├── photos.js — модуль работы с фото
+│ ├── map.js — модуль карты
+│ └── app.js — UI и связка модулей
+├── data/ — статические данные
+│ └── sample-trips.json — пример данных
+├── tests/ — unit-тесты
+│ └── logic.test.js
+├── .editorconfig
+├── .gitignore
+└── README.md
+
+---
+
+## 🚀 Запуск
+
+1. Скачай или склонируй репозиторий:
+   ```bash
+   git clone https://github.com/Raisa23127/travel-diary.git
