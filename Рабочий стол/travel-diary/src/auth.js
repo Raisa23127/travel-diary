@@ -1,14 +1,15 @@
-// src/auth.js — модуль авторизации пользователей
-// Отвечает за регистрацию, вход, выход и хранение сессии.
+// =========================================================
+// auth.js — модуль авторизации
+// =========================================================
 
 const Auth = (() => {
     const USERS_KEY = 'travel_users';
     const SESSION_KEY = 'travel_session';
 
     /**
-     * Хэширует пароль через SHA-256 (Web Crypto API).
-     * @param {string} password - пароль в открытом виде
-     * @returns {Promise<string>} hex-строка с хэшем
+     * Хэширует пароль через SHA-256.
+     * @param {string} password
+     * @returns {Promise<string>}
      */
     async function hashPassword(password) {
         const enc = new TextEncoder();
@@ -19,24 +20,15 @@ const Auth = (() => {
             .join('');
     }
 
-    /** @returns {Array<Object>} список всех пользователей */
     function getUsers() {
         try { return JSON.parse(localStorage.getItem(USERS_KEY)) || []; }
         catch { return []; }
     }
 
-    /** Сохраняет список пользователей в localStorage */
     function saveUsers(users) {
         localStorage.setItem(USERS_KEY, JSON.stringify(users));
     }
 
-    /**
-     * Регистрирует нового пользователя.
-     * @param {string} name
-     * @param {string} email
-     * @param {string} password
-     * @returns {Promise<Object>} созданный пользователь
-     */
     async function register(name, email, password) {
         email = email.trim().toLowerCase();
         name = name.trim();
@@ -60,10 +52,6 @@ const Auth = (() => {
         return user;
     }
 
-    /**
-     * Вход по email и паролю.
-     * @returns {Promise<Object>} пользователь
-     */
     async function login(email, password) {
         email = email.trim().toLowerCase();
         const users = getUsers();
@@ -86,7 +74,6 @@ const Auth = (() => {
         }));
     }
 
-    /** @returns {Object|null} текущий авторизованный пользователь */
     function currentUser() {
         try {
             const s = JSON.parse(localStorage.getItem(SESSION_KEY));

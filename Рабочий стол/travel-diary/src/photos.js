@@ -1,15 +1,9 @@
-// src/photos.js — модуль работы с фотографиями
-// Отвечает за сжатие изображений и оценку размера.
+// =========================================================
+// photos.js — модуль работы с фотографиями
+// =========================================================
 
 const PhotoUtils = (() => {
 
-    /**
-     * Сжимает изображение до maxSize по большей стороне.
-     * @param {File} file - файл изображения
-     * @param {number} maxSize - максимум пикселей по большей стороне
-     * @param {number} quality - качество JPEG (0..1)
-     * @returns {Promise<string>} data URL в формате JPEG
-     */
     function compressImage(file, maxSize = 1200, quality = 0.8) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -41,14 +35,14 @@ const PhotoUtils = (() => {
         });
     }
 
-    /**
-     * Оценивает размер data URL в килобайтах.
-     * @param {string} dataUrl
-     * @returns {number} размер в КБ
-     */
     function sizeKb(dataUrl) {
         return Math.round(dataUrl.length * 0.75 / 1024);
     }
 
-    return { compressImage, sizeKb };
+    function getTotalPhotos(trips) {
+        return trips.reduce((sum, t) =>
+            sum + (Array.isArray(t.photos) ? t.photos.length : 0), 0);
+    }
+
+    return { compressImage, sizeKb, getTotalPhotos };
 })();
